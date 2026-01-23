@@ -36,21 +36,28 @@ const FounderResult: React.FC = () => {
 
   const handleGenerateVoice = async () => {
     if (!idea?.analysis?.pitch) return;
+    
     if (isPlaying) {
       stopSpeaking();
       setIsPlaying(false);
       return;
     }
+    
     if (isAudioMuted()) {
       alert("Audio is muted. Please unmute in the header to listen.");
       return;
     }
+
     setVoiceGenerating(true);
+    // Even for simulation, we keep the step to mimic professional integration
     await generateVoicePitch(idea.analysis.pitch);
     setVoiceGenerating(false);
     setVoiceReady(true);
     setIsPlaying(true);
-    speakText(idea.analysis.pitch);
+    
+    speakText(idea.analysis.pitch, () => {
+      setIsPlaying(false);
+    });
   };
 
   const handlePublish = async () => {
@@ -196,7 +203,7 @@ const FounderResult: React.FC = () => {
               <div className="w-6 h-6 border-4 border-slate-900/30 border-t-slate-900 rounded-full animate-spin"></div>
             ) : (
               <>
-                <div className="w-6 h-6">{isPlaying ? '■' : '▶'}</div>
+                <div className="w-6 h-6 flex items-center justify-center">{isPlaying ? '■' : '▶'}</div>
                 <span>{isPlaying ? 'STOP PLAYBACK' : (voiceReady ? 'REPLAY PITCH' : 'LISTEN TO AI PITCH')}</span>
               </>
             )}

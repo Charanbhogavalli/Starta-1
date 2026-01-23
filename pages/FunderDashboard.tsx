@@ -31,67 +31,70 @@ const FunderDashboard: React.FC = () => {
   }, [ideas, searchQuery]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
-        <div>
-          <h1 className="text-4xl font-black mb-2 text-white">Deal Flow</h1>
-          <p className="text-slate-400 font-medium">Browse summaries of vetted ideas. Request access to unlock full analysis.</p>
+    <div className="max-w-7xl mx-auto px-4 py-16 lg:py-24">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20">
+        <div className="max-w-2xl">
+          <h1 className="text-5xl font-black mb-4 text-white tracking-tight">Deal Flow</h1>
+          <p className="text-slate-400 text-lg font-medium leading-relaxed">Browse high-potential ventures screened by our VC intelligence engine. Unlock full analysis by requesting founder disclosure.</p>
         </div>
         
         {/* Search Bar */}
-        <div className="relative w-full md:w-96 group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <div className="relative w-full lg:w-96 group">
+          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
             <svg className="w-5 h-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           <input
             type="text"
-            placeholder="Search by name, tech, or market..."
+            placeholder="Search sector, tech, or name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-slate-900/50 border border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-white placeholder-slate-600 font-semibold shadow-inner"
+            className="w-full pl-14 pr-4 py-5 bg-slate-900/40 border border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-white placeholder-slate-600 font-bold shadow-2xl backdrop-blur-sm"
           />
           {searchQuery && (
             <button 
               onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors"
+              className="absolute inset-y-0 right-0 pr-5 flex items-center text-slate-500 hover:text-white transition-colors"
             >
-              <span className="bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black">✕</span>
+              <span className="bg-slate-800 rounded-full w-6 h-6 flex items-center justify-center text-[10px] font-black uppercase">✕</span>
             </button>
           )}
         </div>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
            {[1,2,3,4,5,6].map(i => (
-             <div key={i} className="h-72 bg-slate-800/50 rounded-[2rem] animate-pulse border border-slate-800"></div>
+             <div key={i} className="h-80 bg-slate-900/30 rounded-[2.5rem] animate-pulse border border-slate-800"></div>
            ))}
         </div>
       ) : filteredIdeas.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredIdeas.map(idea => (
-            <div key={idea.id} className="group bg-slate-900/40 border border-slate-800 p-8 rounded-[2rem] hover:border-blue-500/50 transition-all hover:-translate-y-1 shadow-xl flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 blur-[50px] -mr-16 -mt-16 group-hover:bg-blue-600/10 transition-colors"></div>
+            <div key={idea.id} className="group relative bg-slate-900/30 border border-slate-800/80 p-8 rounded-[2.5rem] hover:border-blue-500/40 transition-all hover:-translate-y-2 shadow-2xl flex flex-col overflow-hidden backdrop-blur-sm">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-blue-600/5 blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity"></div>
               
-              <div className="flex justify-between items-start mb-6 relative z-10">
-                <h3 className="text-2xl font-black text-white group-hover:text-blue-400 transition-colors">{idea.title}</h3>
+              <div className="flex justify-between items-start mb-8 relative z-10">
+                <div className="flex-1 pr-4">
+                   <h3 className="text-2xl font-black text-white group-hover:text-blue-400 transition-colors leading-tight mb-2">{idea.title}</h3>
+                   <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/5 px-3 py-1 rounded-full border border-emerald-500/10 uppercase tracking-widest">Vetted</span>
+                </div>
                 <div className="flex flex-col items-end">
-                  <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full uppercase font-black tracking-widest mb-2">Vetted</span>
-                  <div className="text-xl font-mono font-black text-slate-500 group-hover:text-blue-500 transition-colors">
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">SCORE</span>
+                  <div className="text-3xl font-black text-blue-500 font-mono leading-none group-hover:scale-110 transition-transform origin-right">
                     {idea.analysis?.score || '--'}
                   </div>
                 </div>
               </div>
 
-              <p className="text-slate-400 italic mb-10 leading-relaxed flex-grow font-medium relative z-10">
-                "{idea.analysis?.oneLineSummary || 'Confidential summary pending analysis...'}"
+              <p className="text-slate-400 font-medium italic mb-10 leading-relaxed flex-grow relative z-10 text-sm">
+                "{idea.analysis?.oneLineSummary || 'Proprietary summary pending evaluation...'}"
               </p>
 
               <Link 
                 to={`/funder/view/${idea.id}`}
-                className="w-full bg-slate-800 text-center py-4 rounded-2xl font-black text-blue-500 hover:bg-blue-600 hover:text-white transition-all shadow-lg active:scale-95 relative z-10"
+                className="w-full bg-white text-slate-950 py-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-xl active:scale-95 relative z-10 text-center"
               >
                 REQUEST ACCESS
               </Link>
@@ -99,17 +102,17 @@ const FunderDashboard: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-32 bg-slate-900/30 rounded-[3rem] border border-dashed border-slate-800 animate-in fade-in zoom-in-95 duration-500">
-           <div className="text-6xl mb-6 opacity-30">🔍</div>
-           <h3 className="text-2xl font-black text-white mb-2">No matches found</h3>
-           <p className="text-slate-500 font-medium max-w-xs mx-auto">
-             Try adjusting your search criteria or explore our featured deal flow.
+        <div className="text-center py-40 bg-slate-900/20 rounded-[4rem] border border-dashed border-slate-800/50 animate-in fade-in zoom-in-95 duration-700">
+           <div className="text-7xl mb-8 opacity-20">🔎</div>
+           <h3 className="text-3xl font-black text-white mb-3">Zero Matches</h3>
+           <p className="text-slate-500 font-medium max-w-sm mx-auto text-lg">
+             No ventures match your current search parameters. Expand your criteria or check back later.
            </p>
            <button 
              onClick={() => setSearchQuery('')}
-             className="mt-8 text-blue-500 font-black text-sm uppercase tracking-widest hover:text-blue-400 transition"
+             className="mt-10 bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition shadow-xl"
            >
-             Clear Search
+             Reset Deal Flow
            </button>
         </div>
       )}

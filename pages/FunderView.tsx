@@ -71,6 +71,22 @@ const FunderView = () => {
     }
   };
 
+  const togglePitch = () => {
+    if (!idea?.analysis?.pitch) return;
+    
+    if (isPlaying) {
+      stopSpeaking();
+      setIsPlaying(false);
+    } else {
+      if (isAudioMuted()) {
+        alert("Audio is muted. Please unmute in the header to listen.");
+        return;
+      }
+      setIsPlaying(true);
+      speakText(idea.analysis.pitch, () => setIsPlaying(false));
+    }
+  };
+
   if (loading) return <div className="p-20 text-center animate-pulse text-slate-500 font-bold uppercase tracking-widest">Accessing Secure Vault...</div>;
   if (!idea) return <div className="p-20 text-center">Idea not found</div>;
 
@@ -199,8 +215,8 @@ const FunderView = () => {
                   <p className="text-blue-500 text-xs font-black uppercase tracking-widest">AI Synthesized Audio Available</p>
                </div>
                <button 
-                  onClick={() => { if(isPlaying) { stopSpeaking(); setIsPlaying(false); } else { speakText(idea.analysis!.pitch); setIsPlaying(true); } }}
-                  className={`${isPlaying ? 'bg-rose-600 animate-pulse' : 'bg-white hover:bg-slate-100'} p-6 rounded-2xl transition-all shadow-2xl active:scale-90`}
+                  onClick={togglePitch}
+                  className={`${isPlaying ? 'bg-rose-600 animate-pulse' : 'bg-white hover:bg-slate-100'} p-6 rounded-2xl transition-all shadow-2xl active:scale-90 flex items-center justify-center`}
                 >
                  {isPlaying ? (
                    <div className="w-6 h-6 text-white flex items-center justify-center">■</div>

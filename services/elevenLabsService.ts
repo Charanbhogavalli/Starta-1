@@ -1,8 +1,9 @@
 
 // Note: Since this is a client-side demo and ElevenLabs requires an API key we don't have in process.env,
-// we will simulate the flow for the demo or use Web Speech API as a fallback to ensure stability.
+// we will use Web Speech API as a robust fallback to ensure stability and cross-browser support.
 
 const AUDIO_MUTE_KEY = 'starta_audio_muted';
+let currentUtterance: SpeechSynthesisUtterance | null = null;
 
 export const isAudioMuted = (): boolean => {
   return localStorage.getItem(AUDIO_MUTE_KEY) === 'true';
@@ -32,16 +33,34 @@ export const stopSpeaking = () => {
   }
 };
 
-export const speakText = (text: string) => {
-  if (isAudioMuted()) return;
+export const speakText = (text: string, onEnd?: () => void) => {
+  if (isAudioMuted()) {
+    onEnd?.();
+    return;
+  }
 
   if ('speechSynthesis' in window) {
     // Cancel any ongoing speech before starting new one
     window.speechSynthesis.cancel();
     
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    window.speechSynthesis.speak(utterance);
+    currentUtterance = new SpeechSynthesisUtterance(text);
+    currentUtterance.rate = 1.0;
+    currentUtterance.pitch = 1.0;
+    
+    // We bind the onend and onerror to the provided callback to reset UI state
+    currentUtterance.onend = () => {
+      currentUtterance = null;
+      onEnd?.();
+    };
+    
+    currentUtterance.onerror = (event) => {
+      console.error("Speech Synthesis Error:", event);
+      currentUtterance = null;
+      onEnd?.();
+    };
+    
+    window.speechSynthesis.speak(currentUtterance);
+  } else {
+    onEnd?.();
   }
 };
