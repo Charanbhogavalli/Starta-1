@@ -37,7 +37,7 @@ const saveLocal = <T extends { id: string }>(key: string, item: T) => {
 async function safeFetch(path: string, options: RequestInit = {}) {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     const response = await fetch(`${URL}${path}`, {
       ...options,
@@ -56,7 +56,6 @@ async function safeFetch(path: string, options: RequestInit = {}) {
     const text = await response.text();
     return text ? JSON.parse(text) : {};
   } catch (error) {
-    console.warn(`Supabase ${path} unreachable. Falling back to LocalStorage.`);
     currentStatus = 'local';
     return null;
   }
@@ -98,19 +97,11 @@ export const db = {
 
   saveIdea: async (idea: StartupIdea): Promise<void> => {
     saveLocal(L_KEYS.IDEAS, idea);
-    const existing = await db.getIdeaById(idea.id);
-    if (existing) {
-      await safeFetch(`/rest/v1/ideas?id=eq.${idea.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(idea)
-      });
-    } else {
-      await safeFetch(`/rest/v1/ideas`, {
-        method: "POST",
-        headers: { "Prefer": "return=minimal" },
-        body: JSON.stringify(idea)
-      });
-    }
+    await safeFetch(`/rest/v1/ideas`, {
+      method: "POST",
+      headers: { "Prefer": "resolution=merge-duplicates" },
+      body: JSON.stringify(idea)
+    });
   },
 
   // Connection Requests
@@ -121,6 +112,7 @@ export const db = {
   },
 
   getRequest: async (ideaId: string, funderId: string): Promise<ConnectionRequest | undefined> => {
+    // Try cloud first with double filter
     const cloudData = await safeFetch(`/rest/v1/requests?ideaId=eq.${ideaId}&funderId=eq.${funderId}`);
     if (cloudData && cloudData.length > 0) return cloudData[0];
     const local = getLocal<ConnectionRequest>(L_KEYS.REQUESTS);
@@ -136,19 +128,11 @@ export const db = {
 
   saveRequest: async (req: ConnectionRequest): Promise<void> => {
     saveLocal(L_KEYS.REQUESTS, req);
-    const existing = await db.getRequestById(req.id);
-    if (existing) {
-      await safeFetch(`/rest/v1/requests?id=eq.${req.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(req)
-      });
-    } else {
-      await safeFetch(`/rest/v1/requests`, {
-        method: "POST",
-        headers: { "Prefer": "return=minimal" },
-        body: JSON.stringify(req)
-      });
-    }
+    await safeFetch(`/rest/v1/requests`, {
+      method: "POST",
+      headers: { "Prefer": "resolution=merge-duplicates" },
+      body: JSON.stringify(req)
+    });
   },
 
   getRequestsForFounder: async (founderId: string): Promise<ConnectionRequest[]> => {
@@ -172,7 +156,7 @@ export const db = {
     localStorage.setItem(L_KEYS.CHATS, JSON.stringify(chats));
     await safeFetch(`/rest/v1/chats`, {
       method: "POST",
-      headers: { "Prefer": "return=minimal" },
+      headers: { "Prefer": "resolution=merge-duplicates" },
       body: JSON.stringify(msg)
     });
   }
