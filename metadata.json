@@ -1,0 +1,7 @@
+{
+  "name": "Starta - ATS for Startup Ideas",
+  "description": "Starta is an AI-powered evaluation platform for startup ideas. Founders get instant validation and analysis, while funders discover high-potential ventures. Built with Gemini AI for deep insights and ElevenLabs for realistic pitch generation.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
