@@ -1,7 +1,7 @@
 
 import { StartupIdea, ConnectionRequest, ChatMessage, User } from '../types';
 
-// Replace these with your actual Supabase Project URL and Anon Key
+// Supabase Configuration
 const URL = "https://pnqjppdjreadlcsllrrd.supabase.co";
 const KEY = "sb_publishable_InZDoorwnWUyDyF0ynX80w_eTFNQYrx";
 
@@ -22,22 +22,31 @@ export type DBStatus = 'connecting' | 'cloud' | 'local';
 let currentStatus: DBStatus = 'connecting';
 
 const getLocal = <T>(key: string): T[] => {
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : [];
+  try {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    return [];
+  }
 };
 
 const saveLocal = <T extends { id: string }>(key: string, item: T) => {
-  const items = getLocal<T>(key);
-  const idx = items.findIndex(i => i.id === item.id);
-  if (idx > -1) items[idx] = item;
-  else items.push(item);
-  localStorage.setItem(key, JSON.stringify(items));
+  try {
+    const items = getLocal<T>(key);
+    const idx = items.findIndex(i => i.id === item.id);
+    if (idx > -1) items[idx] = item;
+    else items.push(item);
+    localStorage.setItem(key, JSON.stringify(items));
+  } catch (e) {
+    console.warn("Local storage save failed", e);
+  }
 };
 
 async function safeFetch(path: string, options: RequestInit = {}) {
   try {
+    // Short timeout for cloud check to keep UI snappy
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
 
     const response = await fetch(`${URL}${path}`, {
       ...options,
@@ -48,6 +57,9 @@ async function safeFetch(path: string, options: RequestInit = {}) {
     clearTimeout(timeoutId);
     
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        console.warn("Supabase auth failed. Staying in local mode.");
+      }
       currentStatus = 'local';
       return null;
     }
@@ -67,7 +79,7 @@ export const db = {
   // Users
   getUser: async (id: string): Promise<User | null> => {
     const cloudData = await safeFetch(`/rest/v1/users?id=eq.${id}`);
-    if (cloudData && cloudData.length > 0) return cloudData[0];
+    if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) return cloudData[0];
     const local = getLocal<User>(L_KEYS.USERS);
     return local.find(u => u.id === id) || null;
   },
@@ -84,13 +96,13 @@ export const db = {
   // Ideas
   getIdeas: async (): Promise<StartupIdea[]> => {
     const cloudData = await safeFetch(`/rest/v1/ideas?order=createdAt.desc`);
-    if (cloudData) return cloudData;
+    if (cloudData && Array.isArray(cloudData)) return cloudData;
     return getLocal<StartupIdea>(L_KEYS.IDEAS).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
   },
 
   getIdeaById: async (id: string): Promise<StartupIdea | undefined> => {
     const cloudData = await safeFetch(`/rest/v1/ideas?id=eq.${id}`);
-    if (cloudData && cloudData.length > 0) return cloudData[0];
+    if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) return cloudData[0];
     const local = getLocal<StartupIdea>(L_KEYS.IDEAS);
     return local.find(i => i.id === id);
   },
@@ -107,21 +119,20 @@ export const db = {
   // Connection Requests
   getRequests: async (): Promise<ConnectionRequest[]> => {
     const cloudData = await safeFetch(`/rest/v1/requests`);
-    if (cloudData) return cloudData;
+    if (cloudData && Array.isArray(cloudData)) return cloudData;
     return getLocal<ConnectionRequest>(L_KEYS.REQUESTS);
   },
 
   getRequest: async (ideaId: string, funderId: string): Promise<ConnectionRequest | undefined> => {
-    // Try cloud first with double filter
     const cloudData = await safeFetch(`/rest/v1/requests?ideaId=eq.${ideaId}&funderId=eq.${funderId}`);
-    if (cloudData && cloudData.length > 0) return cloudData[0];
+    if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) return cloudData[0];
     const local = getLocal<ConnectionRequest>(L_KEYS.REQUESTS);
     return local.find(r => r.ideaId === ideaId && r.funderId === funderId);
   },
 
   getRequestById: async (id: string): Promise<ConnectionRequest | undefined> => {
     const cloudData = await safeFetch(`/rest/v1/requests?id=eq.${id}`);
-    if (cloudData && cloudData.length > 0) return cloudData[0];
+    if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) return cloudData[0];
     const local = getLocal<ConnectionRequest>(L_KEYS.REQUESTS);
     return local.find(r => r.id === id);
   },
@@ -137,7 +148,7 @@ export const db = {
 
   getRequestsForFounder: async (founderId: string): Promise<ConnectionRequest[]> => {
     const cloudData = await safeFetch(`/rest/v1/requests?founderId=eq.${founderId}`);
-    if (cloudData) return cloudData;
+    if (cloudData && Array.isArray(cloudData)) return cloudData;
     const local = getLocal<ConnectionRequest>(L_KEYS.REQUESTS);
     return local.filter(r => r.founderId === founderId);
   },
@@ -145,7 +156,7 @@ export const db = {
   // Chat
   getMessages: async (connectionId: string): Promise<ChatMessage[]> => {
     const cloudData = await safeFetch(`/rest/v1/chats?connectionId=eq.${connectionId}&order=timestamp.asc`);
-    if (cloudData) return cloudData;
+    if (cloudData && Array.isArray(cloudData)) return cloudData;
     const local = getLocal<ChatMessage>(L_KEYS.CHATS);
     return local.filter(m => m.connectionId === connectionId).sort((a,b) => a.timestamp.localeCompare(b.timestamp));
   },

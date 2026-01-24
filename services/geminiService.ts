@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { AnalysisResult } from "../types";
 
@@ -28,13 +27,21 @@ const analysisSchema = {
 };
 
 export const analyzeStartupIdea = async (ideaDescription: string): Promise<AnalysisResult> => {
-  // Always initialize GoogleGenAI with a configuration object containing the API key from process.env.API_KEY.
+  const apiKey = process.env.API_KEY;
+  
+  if (!apiKey) {
+    console.error("Gemini API Key is missing. Ensure process.env.API_KEY is defined in your build environment.");
+    throw new Error("API configuration error. Please contact the administrator.");
+  }
+
+  // Always use a named parameter for apiKey initialization.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const prompt = `Act as an expert VC analyst. Evaluate this idea: "${ideaDescription}". Provide a punchy one-line summary, specific scores, and detailed feedback.`;
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      // Upgraded to gemini-3-pro-preview for complex reasoning and evaluation tasks.
+      model: "gemini-3-pro-preview",
       contents: prompt,
       config: { 
         responseMimeType: "application/json", 
@@ -42,7 +49,7 @@ export const analyzeStartupIdea = async (ideaDescription: string): Promise<Analy
       },
     });
     
-    // Use .text property directly instead of calling it as a method.
+    // Correct usage of .text property (not a method).
     const responseText = response.text;
     if (!responseText) {
       throw new Error("No response text returned from Gemini API");
